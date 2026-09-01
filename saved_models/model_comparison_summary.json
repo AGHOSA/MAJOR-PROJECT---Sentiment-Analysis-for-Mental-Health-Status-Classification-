@@ -137,7 +137,11 @@
       "Stress",
       "Suicidal"
     ],
-    "training_time_seconds": 0.06
+    "training_time_seconds": 0.06,
+    "display_name": "Logistic Regression",
+    "accuracy_pct": "100.0%",
+    "f1_macro_pct": "100.0%",
+    "is_best": true
   },
   "linear_svm": {
     "model_name": "linear_svm",
@@ -277,7 +281,11 @@
       "Stress",
       "Suicidal"
     ],
-    "training_time_seconds": 0.09
+    "training_time_seconds": 0.09,
+    "display_name": "Linear Svm",
+    "accuracy_pct": "100.0%",
+    "f1_macro_pct": "100.0%",
+    "is_best": false
   },
   "random_forest": {
     "model_name": "random_forest",
@@ -417,7 +425,11 @@
       "Stress",
       "Suicidal"
     ],
-    "training_time_seconds": 0.78
+    "training_time_seconds": 1.59,
+    "display_name": "Random Forest",
+    "accuracy_pct": "100.0%",
+    "f1_macro_pct": "100.0%",
+    "is_best": false
   },
   "naive_bayes": {
     "model_name": "naive_bayes",
@@ -557,6 +569,10 @@
       "Stress",
       "Suicidal"
     ],
-    "training_time_seconds": 0.07
+    "training_time_seconds": 0.1,
+    "display_name": "Naive Bayes",
+    "accuracy_pct": "100.0%",
+    "f1_macro_pct": "100.0%",
+    "is_best": false
   }
 }

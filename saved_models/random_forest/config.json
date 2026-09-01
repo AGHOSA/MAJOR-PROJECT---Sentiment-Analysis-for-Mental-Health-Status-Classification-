@@ -1,5 +1,5 @@
 {
-  "model_name": "logistic_regression",
+  "model_name": "random_forest",
   "max_features": 5000,
   "ngram_range": [
     1,

@@ -275,9 +275,50 @@ def get_analytics_summary(db_path: Optional[str] = None) -> Dict[str, Any]:
         for row in feedback_cursor.fetchall()
     }
     
+    # Calculate detailed human accuracy feedback analysis
+    total_feedback = sum(feedback_counts.values())
+    accurate_count = feedback_counts.get("accurate", 0) + feedback_counts.get("helpful", 0)
+    inaccurate_count = feedback_counts.get("inaccurate", 0)
+    human_accuracy_pct = round((accurate_count / total_feedback) * 100, 1) if total_feedback > 0 else 0.0
+    
+    # Corrections count
+    corrections_cursor = conn.execute("""
+        SELECT COUNT(*) as count
+        FROM predictions
+        WHERE corrected_category IS NOT NULL AND TRIM(corrected_category) != ''
+    """)
+    corrections_count = corrections_cursor.fetchone()["count"] or 0
+    
+    # Category-specific feedback breakdown
+    cat_fb_cursor = conn.execute("""
+        SELECT predicted_category, user_feedback, COUNT(*) as count
+        FROM predictions
+        WHERE user_feedback IS NOT NULL
+        GROUP BY predicted_category, user_feedback
+    """)
+    category_feedback: Dict[str, Dict[str, int]] = {}
+    for row in cat_fb_cursor.fetchall():
+        cat = row["predicted_category"]
+        fb = row["user_feedback"]
+        cnt = row["count"]
+        if cat not in category_feedback:
+            category_feedback[cat] = {}
+        category_feedback[cat][fb] = cnt
+    
+    feedback_summary = {
+        "total_feedback": total_feedback,
+        "accurate_count": accurate_count,
+        "inaccurate_count": inaccurate_count,
+        "human_accuracy_percentage": human_accuracy_pct,
+        "human_accuracy_pct_str": f"{human_accuracy_pct:.1f}%" if total_feedback > 0 else "N/A",
+        "corrections_count": corrections_count,
+        "category_feedback": category_feedback
+    }
+    
     return {
         "total_predictions": total_predictions,
         "average_confidence": avg_confidence,
         "category_distribution": category_counts,
-        "feedback_distribution": feedback_counts
+        "feedback_distribution": feedback_counts,
+        "feedback_summary": feedback_summary
     }

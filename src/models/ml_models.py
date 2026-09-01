@@ -738,6 +738,13 @@ def train_and_evaluate_all_models(
         metrics = clf.evaluate(X_test, y_test, output_dir=output_dir, plot_cm=True)
         metrics["training_time_seconds"] = round(train_time, 2)
         
+        # Save each model in its own subdirectory
+        model_sub_dir = os.path.join(output_dir, model_name)
+        clf.save(model_sub_dir)
+        
+        metrics["display_name"] = model_name.replace("_", " ").title()
+        metrics["accuracy_pct"] = f"{metrics['accuracy'] * 100:.1f}%"
+        metrics["f1_macro_pct"] = f"{metrics['f1_macro'] * 100:.1f}%"
         all_results[model_name] = metrics
         fitted_classifiers[model_name] = clf
         
@@ -745,7 +752,11 @@ def train_and_evaluate_all_models(
             best_f1 = metrics["f1_macro"]
             best_model_name = model_name
             
-    # Save the best model to the top-level output directory
+    # Mark is_best on the top-performing model
+    for m_name in all_results:
+        all_results[m_name]["is_best"] = (m_name == best_model_name)
+
+    # Save the best model to the top-level best_model directory
     logger.info(f"\n=======================================================")
     logger.info(f"[BEST MODEL] Best Performing Model: {best_model_name.upper()} (F1-Macro: {best_f1:.4f})")
     logger.info(f"=======================================================")

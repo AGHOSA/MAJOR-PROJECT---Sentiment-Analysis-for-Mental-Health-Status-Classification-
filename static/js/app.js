@@ -18,6 +18,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const topNWordsRange = document.getElementById("topNWordsRange");
   const topNWordsDisplay = document.getElementById("topNWordsDisplay");
   const presetChipsContainer = document.getElementById("presetChipsContainer");
+  const modelSelectDropdown = document.getElementById("modelSelectDropdown");
+  const activeModelBadge = document.getElementById("activeModelBadge");
+  const bestModelPill = document.getElementById("bestModelPill");
+  const modelComparisonPills = document.getElementById("modelComparisonPills");
+
+  // User Accuracy Feedback & Modal Elements
+  const userFeedbackSection = document.getElementById("userFeedbackSection");
+  const feedbackAccurateBtn = document.getElementById("feedbackAccurateBtn");
+  const feedbackInaccurateBtn = document.getElementById("feedbackInaccurateBtn");
+  const feedbackHelpfulBtn = document.getElementById("feedbackHelpfulBtn");
+  const openDetailedFeedbackLink = document.getElementById("openDetailedFeedbackLink");
+  const feedbackActionsGroup = document.getElementById("feedbackActionsGroup");
+  const feedbackConfirmationBadge = document.getElementById("feedbackConfirmationBadge");
+  const feedbackConfirmationText = document.getElementById("feedbackConfirmationText");
+  const feedbackCorrectionDrawer = document.getElementById("feedbackCorrectionDrawer");
+  const feedbackCorrectionSelect = document.getElementById("feedbackCorrectionSelect");
+  const feedbackNotesInput = document.getElementById("feedbackNotesInput");
+  const submitCorrectionBtn = document.getElementById("submitCorrectionBtn");
+
+  // Feedback Modal Form Elements
+  const openFeedbackModalBtn = document.getElementById("openFeedbackModalBtn");
+  const feedbackModal = document.getElementById("feedbackModal");
+  const closeFeedbackModalBtn = document.getElementById("closeFeedbackModalBtn");
+  const cancelFeedbackModalBtn = document.getElementById("cancelFeedbackModalBtn");
+  const dedicatedFeedbackForm = document.getElementById("dedicatedFeedbackForm");
+  const modalStatementContext = document.getElementById("modalStatementContext");
+  const modalCorrectedCategory = document.getElementById("modalCorrectedCategory");
+  const modalFeedbackNotes = document.getElementById("modalFeedbackNotes");
+  const modalNotesCount = document.getElementById("modalNotesCount");
 
   // Language Switcher
   const langBtnHindi = document.getElementById("langBtnHindi");
@@ -241,7 +270,28 @@ document.addEventListener("DOMContentLoaded", () => {
   loadAnalyticsSummary();
   loadHistoryRecords();
   loadModelArchitectureInfo();
+  loadModelsCatalog();
   initSpeechRecognition();
+  initFeedbackControls();
+
+  // Model Dropdown Change Handler
+  if (modelSelectDropdown) {
+    modelSelectDropdown.addEventListener("change", async () => {
+      const chosen = modelSelectDropdown.value;
+      const opt = modelSelectDropdown.options[modelSelectDropdown.selectedIndex];
+      if (activeModelBadge) activeModelBadge.textContent = opt ? opt.text.split("•")[0].trim() : chosen;
+      if (activeModelLabel) activeModelLabel.textContent = `${chosen.replace("_", " ").toUpperCase()} Active`;
+      try {
+        await fetch("/api/models/select", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model_name: chosen })
+        });
+      } catch (e) {
+        console.warn("Model select error:", e);
+      }
+    });
+  }
 
   // =========================================================================
   // 3. Tab Navigation Logic
@@ -592,16 +642,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const topN = parseInt(topNWordsRange.value, 10) || 6;
+    const selectedModel = modelSelectDropdown ? modelSelectDropdown.value : undefined;
     setLoadingState(true);
 
     try {
+      const payload = {
+        text: text,
+        top_n_words: topN
+      };
+      if (selectedModel) {
+        payload.model_name = selectedModel;
+      }
+
       const response = await fetch("/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: text,
-          top_n_words: topN
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -688,6 +744,161 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 7. Actionable Coping Solutions & Guidance
     renderSolutions(cat, isHindi);
+
+    // 8. Reset Feedback UI for Current Assessment
+    resetFeedbackUI();
+  }
+
+  function resetFeedbackUI() {
+    if (feedbackConfirmationBadge) feedbackConfirmationBadge.classList.add("hidden");
+    if (feedbackActionsGroup) feedbackActionsGroup.classList.remove("hidden");
+    if (feedbackCorrectionDrawer) feedbackCorrectionDrawer.classList.add("hidden");
+    if (feedbackNotesInput) feedbackNotesInput.value = "";
+    if (feedbackCorrectionSelect) feedbackCorrectionSelect.value = "";
+    document.querySelectorAll(".btn-feedback-action").forEach(b => b.classList.remove("active"));
+  }
+
+  function initFeedbackControls() {
+    if (feedbackAccurateBtn) {
+      feedbackAccurateBtn.addEventListener("click", async () => {
+        if (!currentPredictionData || !currentPredictionData.id) return;
+        feedbackAccurateBtn.classList.add("active");
+        if (feedbackInaccurateBtn) feedbackInaccurateBtn.classList.remove("active");
+        if (feedbackHelpfulBtn) feedbackHelpfulBtn.classList.remove("active");
+        if (feedbackCorrectionDrawer) feedbackCorrectionDrawer.classList.add("hidden");
+
+        await submitFeedback(currentPredictionData.id, "accurate");
+        showFeedbackConfirmation("✅ Marked as Accurate! Thank you for validating.");
+      });
+    }
+
+    if (feedbackInaccurateBtn) {
+      feedbackInaccurateBtn.addEventListener("click", () => {
+        if (!currentPredictionData || !currentPredictionData.id) return;
+        feedbackInaccurateBtn.classList.add("active");
+        if (feedbackAccurateBtn) feedbackAccurateBtn.classList.remove("active");
+        if (feedbackHelpfulBtn) feedbackHelpfulBtn.classList.remove("active");
+        if (feedbackCorrectionDrawer) feedbackCorrectionDrawer.classList.toggle("hidden");
+      });
+    }
+
+    if (feedbackHelpfulBtn) {
+      feedbackHelpfulBtn.addEventListener("click", async () => {
+        if (!currentPredictionData || !currentPredictionData.id) return;
+        feedbackHelpfulBtn.classList.add("active");
+        if (feedbackAccurateBtn) feedbackAccurateBtn.classList.remove("active");
+        if (feedbackInaccurateBtn) feedbackInaccurateBtn.classList.remove("active");
+        if (feedbackCorrectionDrawer) feedbackCorrectionDrawer.classList.add("hidden");
+
+        await submitFeedback(currentPredictionData.id, "helpful");
+        showFeedbackConfirmation("💡 Marked as Helpful! Thank you.");
+      });
+    }
+
+    if (submitCorrectionBtn) {
+      submitCorrectionBtn.addEventListener("click", async () => {
+        if (!currentPredictionData || !currentPredictionData.id) return;
+        const correctedCat = feedbackCorrectionSelect ? feedbackCorrectionSelect.value : null;
+        const notes = feedbackNotesInput ? feedbackNotesInput.value.trim() : null;
+
+        await submitFeedback(currentPredictionData.id, "inaccurate", notes, correctedCat);
+        if (feedbackCorrectionDrawer) feedbackCorrectionDrawer.classList.add("hidden");
+        showFeedbackConfirmation("✅ Correction Saved! Thank you for improving our model.");
+      });
+    }
+
+    // Modal Triggers
+    if (openFeedbackModalBtn) {
+      openFeedbackModalBtn.addEventListener("click", openFeedbackModal);
+    }
+    if (openDetailedFeedbackLink) {
+      openDetailedFeedbackLink.addEventListener("click", openFeedbackModal);
+    }
+    if (closeFeedbackModalBtn) {
+      closeFeedbackModalBtn.addEventListener("click", closeFeedbackModal);
+    }
+    if (cancelFeedbackModalBtn) {
+      cancelFeedbackModalBtn.addEventListener("click", closeFeedbackModal);
+    }
+    if (feedbackModal) {
+      feedbackModal.addEventListener("click", (e) => {
+        if (e.target === feedbackModal) closeFeedbackModal();
+      });
+    }
+
+    // Live Note Character Counter
+    if (modalFeedbackNotes && modalNotesCount) {
+      modalFeedbackNotes.addEventListener("input", () => {
+        modalNotesCount.textContent = modalFeedbackNotes.value.length;
+      });
+    }
+
+    // Dedicated Form Submission
+    if (dedicatedFeedbackForm) {
+      dedicatedFeedbackForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const selectedRating = document.querySelector('input[name="modalUserFeedback"]:checked')?.value || "accurate";
+        const correctedCat = modalCorrectedCategory ? modalCorrectedCategory.value : null;
+        const notes = modalFeedbackNotes ? modalFeedbackNotes.value.trim() : "";
+        const targetId = currentPredictionData ? currentPredictionData.id : null;
+
+        try {
+          const payload = {
+            user_feedback: selectedRating,
+            feedback_notes: notes || null,
+            corrected_category: correctedCat || null
+          };
+
+          const endpoint = targetId ? `/api/history/${targetId}/feedback` : `/api/feedback`;
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            closeFeedbackModal();
+            showFeedbackConfirmation("🎉 Thank you! Your feedback form has been recorded for model improvement.");
+            loadAnalyticsSummary();
+          } else {
+            const err = await res.json();
+            alert("Could not submit feedback: " + (err.detail || "Server error"));
+          }
+        } catch (err) {
+          console.error("Feedback form error:", err);
+          alert("Submission error: " + err.message);
+        }
+      });
+    }
+  }
+
+  function openFeedbackModal() {
+    if (!feedbackModal) return;
+    if (modalStatementContext) {
+      if (currentPredictionData && currentPredictionData.text) {
+        modalStatementContext.innerHTML = `<strong>Statement:</strong> &ldquo;${currentPredictionData.text}&rdquo; <br><span class="text-muted">Classified as: <strong>${currentPredictionData.predicted_category}</strong> (${(currentPredictionData.confidence * 100).toFixed(1)}% certainty)</span>`;
+      } else {
+        modalStatementContext.innerHTML = `<em>No recent statement analyzed in current session. Submitting general AI model feedback.</em>`;
+      }
+    }
+    feedbackModal.classList.remove("hidden");
+    if (modalFeedbackNotes) modalFeedbackNotes.focus();
+  }
+
+  function closeFeedbackModal() {
+    if (!feedbackModal) return;
+    feedbackModal.classList.add("hidden");
+    if (modalFeedbackNotes) {
+      modalFeedbackNotes.value = "";
+      if (modalNotesCount) modalNotesCount.textContent = "0";
+    }
+    if (modalCorrectedCategory) modalCorrectedCategory.value = "";
+  }
+
+  function showFeedbackConfirmation(msg) {
+    if (feedbackConfirmationText) feedbackConfirmationText.textContent = msg;
+    if (feedbackConfirmationBadge) feedbackConfirmationBadge.classList.remove("hidden");
+    if (feedbackActionsGroup) feedbackActionsGroup.classList.add("hidden");
   }
 
   function renderRiskLevel(category, confidence, isHindi) {
@@ -1044,17 +1255,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const total = data.total_predictions || 0;
       const avgConf = data.average_confidence ? (data.average_confidence * 100).toFixed(1) + "%" : "0.0%";
-      const feedbackAccurate = data.feedback_distribution?.accurate || 0;
+      const fbSummary = data.feedback_summary || {};
+      const feedbackAccurate = fbSummary.accurate_count || data.feedback_distribution?.accurate || 0;
+      const totalFb = fbSummary.total_feedback || 0;
+      const accuracyRate = fbSummary.human_accuracy_pct_str || (totalFb > 0 ? ((feedbackAccurate / totalFb) * 100).toFixed(1) + "%" : "N/A");
 
       // Top Ribbon
       if (kpiTotalAssessments) kpiTotalAssessments.textContent = total.toLocaleString();
       if (kpiAvgConfidence) kpiAvgConfidence.textContent = avgConf;
-      if (kpiFeedbackCount) kpiFeedbackCount.textContent = `${feedbackAccurate} Verified`;
+      if (kpiFeedbackCount) kpiFeedbackCount.textContent = totalFb > 0 ? `${accuracyRate} (${feedbackAccurate}/${totalFb})` : `${feedbackAccurate} Verified`;
 
       // DB Summary
       if (dbTotalCount) dbTotalCount.textContent = `${total} Stored Inferences`;
       if (dbMeanConf) dbMeanConf.textContent = avgConf;
-      if (dbFeedbackCount) dbFeedbackCount.textContent = `${feedbackAccurate} Assessments`;
+      if (dbFeedbackCount) dbFeedbackCount.textContent = `${totalFb} Total Ratings (${accuracyRate} Accurate)`;
+
+      // Feedback Analytics Cards
+      const fbAccurateCount = document.getElementById("fbAccurateCount");
+      const fbAccuratePct = document.getElementById("fbAccuratePct");
+      const fbInaccurateCount = document.getElementById("fbInaccurateCount");
+      const fbInaccuratePct = document.getElementById("fbInaccuratePct");
+      const fbCorrectionsCount = document.getElementById("fbCorrectionsCount");
+      const feedbackAccuracyRateText = document.getElementById("feedbackAccuracyRateText");
+      const feedbackCategoryList = document.getElementById("feedbackCategoryList");
+
+      if (feedbackAccuracyRateText) {
+        feedbackAccuracyRateText.textContent = totalFb > 0 ? `${accuracyRate} Human Accuracy` : "Awaiting User Feedback";
+      }
+      if (fbAccurateCount) fbAccurateCount.textContent = feedbackAccurate;
+      if (fbAccuratePct) {
+        fbAccuratePct.textContent = totalFb > 0 ? `${((feedbackAccurate / totalFb) * 100).toFixed(1)}% of total ratings` : "No ratings yet";
+      }
+      if (fbInaccurateCount) fbInaccurateCount.textContent = fbSummary.inaccurate_count || 0;
+      if (fbInaccuratePct) {
+        const inacc = fbSummary.inaccurate_count || 0;
+        fbInaccuratePct.textContent = totalFb > 0 ? `${((inacc / totalFb) * 100).toFixed(1)}% of total ratings` : "No ratings yet";
+      }
+      if (fbCorrectionsCount) fbCorrectionsCount.textContent = fbSummary.corrections_count || 0;
+
+      // Category-Specific Feedback List
+      if (feedbackCategoryList) {
+        const catFb = fbSummary.category_feedback || {};
+        const catEntries = Object.entries(catFb);
+        if (catEntries.length === 0) {
+          feedbackCategoryList.innerHTML = `<p class="loading-state-text">No user feedback submitted yet. Rate predictions above to see real-time human accuracy trends.</p>`;
+        } else {
+          feedbackCategoryList.innerHTML = "";
+          catEntries.forEach(([catName, counts]) => {
+            const acc = counts.accurate || 0;
+            const inacc = counts.inaccurate || 0;
+            const helpful = counts.helpful || 0;
+            const totalForCat = acc + inacc + helpful;
+            const pct = totalForCat > 0 ? (((acc + helpful) / totalForCat) * 100).toFixed(0) : 0;
+
+            const row = document.createElement("div");
+            row.className = "fb-cat-row";
+            row.innerHTML = `
+              <span class="fb-cat-name">
+                <span class="condition-pill-badge ${getConditionClass(catName)}" style="padding: 2px 7px; font-size: 11px; margin-right: 6px;">${catName}</span>
+              </span>
+              <span class="fb-cat-stat">
+                <strong class="text-emerald">${pct}% Accurate</strong> (${acc + helpful}/${totalForCat})
+              </span>
+            `;
+            feedbackCategoryList.appendChild(row);
+          });
+        }
+      }
 
       // Category Breakdown Bars
       if (analyticsCategoryBars) {
@@ -1237,13 +1504,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function submitFeedback(id, val) {
+  async function submitFeedback(id, val, notes = null, correctedCat = null) {
+    if (!id) return;
     try {
+      const payload = { user_feedback: val };
+      if (notes) payload.feedback_notes = notes;
+      if (correctedCat) payload.corrected_category = correctedCat;
+
       await fetch(`/api/history/${id}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_feedback: val })
+        body: JSON.stringify(payload)
       });
+      loadAnalyticsSummary();
     } catch (e) {
       console.warn("Feedback error:", e);
     }
@@ -1331,6 +1604,51 @@ document.addEventListener("DOMContentLoaded", () => {
       isArchitectureLoaded = true;
     } catch (err) {
       console.warn("Model info error:", err);
+    }
+  }
+
+  // =========================================================================
+  // 14. Dynamic Model Catalog & Benchmark Percentage Sync (/api/models)
+  // =========================================================================
+  async function loadModelsCatalog() {
+    try {
+      const res = await fetch("/api/models");
+      if (!res.ok) return;
+      const data = await res.json();
+      const models = data.models || [];
+      const best = data.best_model || models.find(m => m.is_best) || models[0];
+
+      if (bestModelPill && best) {
+        bestModelPill.innerHTML = `<i class="fa-solid fa-crown text-amber"></i> Best: <strong>${best.short_name || best.name} (${best.accuracy})</strong>`;
+      }
+
+      if (modelComparisonPills && models.length > 0) {
+        modelComparisonPills.innerHTML = "";
+        const colorClasses = ["text-emerald", "text-cyan", "text-amber", "text-purple"];
+        const iconClasses = ["fa-star text-amber", "fa-shield-halved text-cyan", "fa-tree text-green", "fa-chart-simple text-purple"];
+
+        models.forEach((m, idx) => {
+          const card = document.createElement("div");
+          card.className = `model-compare-pill ${m.is_best ? "best-model-highlight" : ""}`;
+          card.id = `pill-${m.id}`;
+
+          const icon = iconClasses[idx % iconClasses.length];
+          const color = colorClasses[idx % colorClasses.length];
+
+          card.innerHTML = `
+            <div class="model-compare-head">
+              <span class="model-icon"><i class="fa-solid ${icon}"></i></span>
+              <span class="model-title">${m.short_name || m.name}</span>
+              ${m.is_best ? '<span class="crown-tag">🏆 Best Model</span>' : ''}
+            </div>
+            <div class="model-compare-pct ${color}">${m.accuracy} Accuracy</div>
+            <div class="model-compare-sub">F1-Score: ${m.f1_score} &bull; Latency: ${m.latency || "~4ms"}</div>
+          `;
+          modelComparisonPills.appendChild(card);
+        });
+      }
+    } catch (err) {
+      console.warn("Models catalog error:", err);
     }
   }
 });
