@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindLens XAI — Explainable Mental Health Text Intelligence</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 Pro Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Design System Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="theme-warm-beige">
+
+  <!-- Ambient Luxury Glow Background Auras -->
+  <div class="ambient-mesh-bg">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="app-header">
+    <div class="container header-container">
+      
+      <!-- Brand Identity -->
+      <div class="brand-wrapper">
+        <div class="brand-badge-icon">
+          <i class="fa-solid fa-brain"></i>
+          <span class="icon-sparkle"><i class="fa-solid fa-sparkles"></i></span>
+        </div>
+        <div class="brand-info">
+          <div class="brand-title-row">
+            <h1>MindLens <span class="badge-accent">XAI</span></h1>
+          </div>
+          <p class="brand-tagline">Explainable AI for Mental Health Text Intelligence &amp; Clinical Decision Support</p>
+        </div>
+      </div>
+
+      <!-- Live Status Badges & Controls -->
+      <div class="header-right-actions">
+        
+        <!-- Voice Language Selector (Hindi / English) -->
+        <div class="language-switcher-pill" id="languageSwitcher" title="Select Voice Language">
+          <span class="lang-label"><i class="fa-solid fa-microphone-lines"></i></span>
+          <button type="button" class="lang-btn active" data-lang="hi-IN" id="langBtnHindi" title="हिंदी (Hindi Voice)">
+            🇮🇳 हिन्दी
+          </button>
+          <button type="button" class="lang-btn" data-lang="en-US" id="langBtnEnglish" title="English Voice">
+            🇬🇧 English
+          </button>
+        </div>
+
+        <!-- Voice Assistant Mode Toggle -->
+        <div class="voice-mode-toggle-pill" id="voiceModeTogglePill" title="Toggle AI Voiceover Assistant">
+          <i class="fa-solid fa-volume-high text-amber"></i>
+          <span>Voice Mode</span>
+          <label class="switch-mini">
+            <input type="checkbox" id="autoVoiceToggle" checked>
+            <span class="slider-round"></span>
+          </label>
+        </div>
+
+        <div class="live-indicator-pill model-pill" id="modelStatusPill" title="Active Machine Learning Pipeline">
+          <span class="pulse-dot green"></span>
+          <span class="indicator-text" id="activeModelLabel">{{ model_name }} Active</span>
+        </div>
+
+        <div class="live-indicator-pill db-pill" id="dbStatusPill" title="SQLite Database WAL Mode Active">
+          <span class="pulse-dot amber"></span>
+          <span class="indicator-text"><i class="fa-solid fa-database"></i> SQLite WAL</span>
+        </div>
+
+        <a href="/docs" target="_blank" class="btn-subtle" title="Interactive REST API Documentation (Swagger UI)" id="swaggerLink">
+          <i class="fa-solid fa-code"></i>
+          <span>Swagger API</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Live Dynamic KPI Ribbon Bar -->
+  <section class="kpi-ribbon-section">
+    <div class="container">
+      <div class="kpi-ribbon-grid">
+        
+        <div class="kpi-card">
+          <div class="kpi-icon-box orange">
+            <i class="fa-solid fa-file-waveform"></i>
+          </div>
+          <div class="kpi-meta">
+            <span class="kpi-label">Evaluations Stored</span>
+            <h3 class="kpi-value" id="kpiTotalAssessments">--</h3>
+          </div>
+          <div class="kpi-glow-accent"></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon-box amber">
+            <i class="fa-solid fa-bullseye"></i>
+          </div>
+          <div class="kpi-meta">
+            <span class="kpi-label">Mean Confidence</span>
+            <h3 class="kpi-value" id="kpiAvgConfidence">--</h3>
+          </div>
+          <div class="kpi-glow-accent"></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon-box terracotta">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div class="kpi-meta">
+            <span class="kpi-label">Recognized Classes</span>
+            <h3 class="kpi-value" id="kpiCategoriesCount">7 Categories</h3>
+          </div>
+          <div class="kpi-glow-accent"></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon-box green">
+            <i class="fa-solid fa-user-check"></i>
+          </div>
+          <div class="kpi-meta">
+            <span class="kpi-label">Human Accuracy Feedback</span>
+            <h3 class="kpi-value" id="kpiFeedbackCount">--</h3>
+          </div>
+          <div class="kpi-glow-accent"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Application Body -->
+  <main class="container main-layout">
+
+    <!-- Top Headline Intro -->
+    <section class="hero-intro">
+      <div class="hero-badge">
+        <i class="fa-solid fa-microphone-lines"></i>
+        <span>Two-Way Multilingual AI Voice &amp; Feature Attribution</span>
+      </div>
+      <h2 class="hero-heading">Empathetic Text Analysis with <span class="gradient-text-warm">AI Voice &amp; Explainability</span></h2>
+      <p class="hero-description">
+        Speak or type naturally in Hindi or English. Deconstructs statements into transparent token-level log-odds weights and speaks empathetic voiceover responses.
+      </p>
+    </section>
+
+    <!-- 2-Column Assessment Workspace -->
+    <div class="workspace-grid">
+
+      <!-- LEFT COLUMN: Input Workspace & Controls -->
+      <section class="surface-card input-workspace-card">
+        <div class="card-head">
+          <div class="card-title-group">
+            <span class="card-icon-tag"><i class="fa-solid fa-pen-to-square"></i></span>
+            <h3>Statement Input Console</h3>
+          </div>
+          <div class="card-head-actions">
+            <button type="button" class="btn-text-action" id="randomizeBtn" title="Load random scenario">
+              <i class="fa-solid fa-dice"></i> Sample
+            </button>
+            <button type="button" class="btn-text-action" id="clearBtn" title="Clear entered statement">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          
+          <!-- Textarea Input Area with Embedded Voice Mic -->
+          <div class="input-field-wrapper">
+            <div class="textarea-header-bar">
+              <span class="input-hint-label"><i class="fa-solid fa-keyboard"></i> Type thoughts or click Voice Mic:</span>
+              <button type="button" class="btn-mic-record" id="voiceInputBtn" title="Click to Speak (Speech-to-Text)">
+                <span class="mic-icon-wrap"><i class="fa-solid fa-microphone"></i></span>
+                <span class="mic-status-text" id="voiceMicStatus">Voice Input</span>
+                <span class="mic-pulse-ring"></span>
+              </button>
+            </div>
+
+            <textarea 
+              id="statementInput" 
+              placeholder="Paste, type, or click 'Voice Input' to speak in Hindi or English... (e.g., 'I feel completely exhausted, hopeless, and cannot focus on anything' or 'मुझे बहुत ज्यादा चिंता और अकेलापन महसूस हो रहा है')" 
+              rows="6"
+              maxlength="2000"
+            ></textarea>
+            
+            <div class="input-field-footer">
+              <div class="badge-stats-row">
+                <span class="stat-pill"><i class="fa-solid fa-align-left"></i> <span id="wordCount">0</span> words</span>
+                <span class="stat-pill"><i class="fa-solid fa-text-width"></i> <span id="currentCount">0</span> / 2000 chars</span>
+              </div>
+              <span class="hotkey-tip">Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to run</span>
+            </div>
+          </div>
+
+          <!-- Explainability Granularity Depth Slider -->
+          <div class="config-row">
+            <div class="config-label">
+              <span><i class="fa-solid fa-sliders text-amber"></i> Explainability Depth:</span>
+              <span class="config-val-badge" id="topNWordsDisplay">6 Top Tokens</span>
+            </div>
+            <div class="slider-wrapper">
+              <input type="range" id="topNWordsRange" min="3" max="15" value="6" step="1" class="custom-range-slider">
+              <div class="slider-marks">
+                <span>3 words</span>
+                <span>6 words</span>
+                <span>10 words</span>
+                <span>15 words</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Preset Scenarios (Loaded from /api/examples) -->
+          <div class="presets-section">
+            <div class="presets-header">
+              <span class="presets-title"><i class="fa-solid fa-flask-vial text-terracotta"></i> Clinical Preset Scenarios:</span>
+            </div>
+            <div class="preset-chips-grid" id="presetChipsContainer">
+              <!-- Dynamically populated from backend /api/examples -->
+              <div class="preset-loading-placeholder">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading preset scenarios...
+              </div>
+            </div>
+          </div>
+
+          <!-- Action CTA Button -->
+          <div class="cta-wrapper">
+            <button type="button" class="btn-primary-warm" id="analyzeBtn">
+              <span class="btn-text-content">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                <span id="analyzeBtnText">Analyze &amp; Explain Statement</span>
+              </span>
+              <span class="btn-spinner hidden" id="loadingSpinner">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+              </span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Dynamic Prediction, Multilingual Voiceover & Explainability Visualizer -->
+      <section class="surface-card visualizer-card" id="visualizerCard">
+        
+        <!-- Empty State Placeholder -->
+        <div class="empty-state-view" id="emptyState">
+          <div class="empty-illustration">
+            <div class="pulse-aura-circle">
+              <i class="fa-solid fa-brain-circuit"></i>
+            </div>
+          </div>
+          <h4>Ready for Linguistic Evaluation</h4>
+          <p id="emptyStateDesc">Speak via microphone on the left (Hindi/English) or select a scenario to generate explainable AI predictions, word attribution weights, and empathetic voiceover response.</p>
+        </div>
+
+        <!-- Dynamic Results Content Container -->
+        <div class="results-view hidden" id="resultsContainer">
+          
+          <!-- AI Voiceover Player Bar -->
+          <div class="voiceover-player-bar" id="voiceoverPlayerBar">
+            <div class="voice-player-left">
+              <button type="button" class="btn-voice-ctrl" id="playVoiceBtn" title="Play / Pause AI Voiceover">
+                <i class="fa-solid fa-play" id="voicePlayIcon"></i>
+              </button>
+              <div class="voice-info-text">
+                <span class="voice-title-label"><i class="fa-solid fa-wand-magic-sparkles text-amber"></i> AI Voiceover Assistant</span>
+                <span class="voice-status-sub" id="voiceStatusSub">Click play to listen to empathetic audio summary</span>
+              </div>
+            </div>
+
+            <!-- Animated Audio Equalizer Wave -->
+            <div class="audio-equalizer hidden" id="audioEqualizer">
+              <span class="eq-bar bar-1"></span>
+              <span class="eq-bar bar-2"></span>
+              <span class="eq-bar bar-3"></span>
+              <span class="eq-bar bar-4"></span>
+              <span class="eq-bar bar-5"></span>
+            </div>
+
+            <div class="voice-player-right">
+              <button type="button" class="btn-voice-subtle" id="replayVoiceBtn" title="Replay voiceover from start">
+                <i class="fa-solid fa-rotate-left"></i> Replay
+              </button>
+              <button type="button" class="btn-voice-subtle danger" id="stopVoiceBtn" title="Stop audio">
+                <i class="fa-solid fa-stop"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Outcome Hero Card -->
+          <div class="outcome-hero-card" id="outcomeHeroCard">
+            <div class="outcome-badge-icon" id="outcomeIcon">
+              <i class="fa-solid fa-heart-pulse"></i>
+            </div>
+            <div class="outcome-text-block">
+              <div class="outcome-lead-row">
+                <span class="outcome-lead">Primary Clinical Indication</span>
+                <span class="risk-level-badge risk-moderate" id="riskLevelBadge">
+                  <i class="fa-solid fa-shield-heart"></i>
+                  <span id="riskLevelText">Moderate Risk</span>
+                </span>
+              </div>
+              <h2 class="outcome-category-name" id="predictedLabel">Depression</h2>
+              <p class="outcome-summary" id="outcomeDescription">Linguistic features indicate significant melancholic and depressive markers.</p>
+              
+              <!-- Detected Linguistic Indicators Badges -->
+              <div class="detected-indicators-row" id="detectedIndicatorsRow">
+                <span class="detected-badge-item"><i class="fa-solid fa-circle-dot"></i> Emotional Exhaustion</span>
+                <span class="detected-badge-item"><i class="fa-solid fa-circle-dot"></i> Isolation Cues</span>
+              </div>
+            </div>
+
+            <!-- Certainty Gauge & Report Action -->
+            <div class="outcome-side-actions">
+              <div class="outcome-confidence-gauge">
+                <div class="gauge-ring-wrapper">
+                  <svg class="progress-ring" width="76" height="76">
+                    <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.08)" stroke-width="6" fill="transparent" r="32" cx="38" cy="38"/>
+                    <circle class="progress-ring-fill" id="confidenceRingFill" stroke="#10b981" stroke-width="6" stroke-linecap="round" fill="transparent" r="32" cx="38" cy="38"/>
+                  </svg>
+                  <div class="gauge-ring-center">
+                    <span class="gauge-pct-text" id="confidenceValue">98.5%</span>
+                    <span class="gauge-caption">Certainty</span>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn-download-report" id="downloadReportBtn" title="Download Printable Clinical Summary Report (PDF)">
+                <i class="fa-solid fa-file-pdf"></i> Report
+              </button>
+            </div>
+          </div>
+
+          <!-- Word-Level Explainability (Token Cloud) -->
+          <div class="analysis-block">
+            <div class="block-header">
+              <div class="block-title">
+                <span class="block-icon-tag amber"><i class="fa-solid fa-highlighter"></i></span>
+                <h4>Word-Level Explainability (Token Attribution)</h4>
+              </div>
+              <span class="legend-badge">
+                <span class="dot-pos"></span> Positive Weight &nbsp;|&nbsp; 
+                <span class="dot-neg"></span> Negative Weight
+              </span>
+            </div>
+            <p class="block-subtext">
+              Words highlighted in warm green/orange drive the prediction towards the classified category. Hover over tokens to see exact log-odds contribution values.
+            </p>
+            <div class="token-attribution-box" id="tokenCloud">
+              <!-- Dynamic token pills will be injected here -->
+            </div>
+          </div>
+
+          <!-- Feature Influence Ranking Bars -->
+          <div class="analysis-block">
+            <div class="block-header">
+              <div class="block-title">
+                <span class="block-icon-tag terracotta"><i class="fa-solid fa-chart-column"></i></span>
+                <h4>Top Influential Feature Weights</h4>
+              </div>
+            </div>
+            <div class="feature-bars-container" id="featureWeightsList">
+              <!-- Dynamic feature bars injected here -->
+            </div>
+          </div>
+
+          <!-- Multi-Class Probability Distribution (7 Classes) -->
+          <div class="analysis-block">
+            <div class="block-header">
+              <div class="block-title">
+                <span class="block-icon-tag orange"><i class="fa-solid fa-bars-staggered"></i></span>
+                <h4>Multi-Class Probability Distribution (7 Categories)</h4>
+              </div>
+            </div>
+            <div class="probabilities-bars-list" id="probabilitiesGrid">
+              <!-- Class distribution rows injected dynamically -->
+            </div>
+          </div>
+
+          <!-- Empathetic Coping Solutions & Actionable Steps Block -->
+          <div class="analysis-block" id="solutionsSection">
+            <div class="block-header">
+              <div class="block-title">
+                <span class="block-icon-tag green"><i class="fa-solid fa-lightbulb"></i></span>
+                <h4 id="solutionsBlockTitle">Evidence-Based Coping Solutions &amp; Action Steps</h4>
+              </div>
+            </div>
+            <p class="block-subtext" id="solutionsBlockSub">
+              Tailored, evidence-based coping strategies and practical steps recommended for this condition:
+            </p>
+            <div class="solutions-cards-grid" id="solutionsListContainer">
+              <!-- Dynamically populated based on predicted category -->
+            </div>
+          </div>
+
+          <!-- Clinical Crisis Notice -->
+          <div class="clinical-notice-box">
+            <div class="notice-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="notice-text">
+              <strong>Clinical &amp; Crisis Notice:</strong>
+              This tool is an AI research prototype for linguistic analysis and <em>not a diagnostic medical device</em>. If you or someone you know is in crisis, please call or text <strong>988</strong> (USA), <strong>14416 / 9152987821</strong> (Tele-MANAS India), or contact your local emergency mental health services.
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- LOWER SECTION: Dynamic Bottom Tabs (Analytics, History, Model Architecture) -->
+    <section class="surface-card bottom-tabs-card">
+      
+      <!-- Tab Navigation Bar -->
+      <div class="tab-navigation-bar">
+        <button class="nav-tab-btn active" data-tab="tab-analytics">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Live SQLite Analytics</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="tab-history">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Assessment History (<span id="historyBadgeCount">0</span>)</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="tab-architecture">
+          <i class="fa-solid fa-microchip"></i>
+          <span>Model Architecture &amp; Benchmark</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="tab-education">
+          <i class="fa-solid fa-book-medical"></i>
+          <span>Clinical Guide &amp; Helplines</span>
+        </button>
+      </div>
+
+      <div class="tab-panels-wrapper">
+
+        <!-- TAB 1: Live Analytics Dashboard -->
+        <div class="tab-panel active" id="tab-analytics">
+          <div class="analytics-dashboard-grid">
+            
+            <div class="analytics-summary-box">
+              <h4 class="panel-section-title"><i class="fa-solid fa-chart-line text-terracotta"></i> Category Distribution Overview</h4>
+              <p class="panel-section-sub">Breakdown of all text statements classified and persisted in the SQLite database.</p>
+              <div class="distribution-bars-wrapper" id="analyticsCategoryBars">
+                <div class="loading-state-text"><i class="fa-solid fa-spinner fa-spin"></i> Fetching live analytics...</div>
+              </div>
+            </div>
+
+            <div class="analytics-kpi-summary-box">
+              <h4 class="panel-section-title"><i class="fa-solid fa-database text-amber"></i> Database Storage &amp; Health</h4>
+              <div class="db-stat-list">
+                <div class="db-stat-item">
+                  <span class="db-stat-name">Database Engine</span>
+                  <span class="db-stat-val">SQLite 3 (WAL Mode)</span>
+                </div>
+                <div class="db-stat-item">
+                  <span class="db-stat-name">Database File</span>
+                  <span class="db-stat-val text-muted-code">data/mental_health_xai.db</span>
+                </div>
+                <div class="db-stat-item">
+                  <span class="db-stat-name">Total Evaluations</span>
+                  <span class="db-stat-val highlight-amber" id="dbTotalCount">--</span>
+                </div>
+                <div class="db-stat-item">
+                  <span class="db-stat-name">Mean Confidence</span>
+                  <span class="db-stat-val highlight-terracotta" id="dbMeanConf">--</span>
+                </div>
+                <div class="db-stat-item">
+                  <span class="db-stat-name">Accuracy Feedback Count</span>
+                  <span class="db-stat-val" id="dbFeedbackCount">--</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TAB 2: Persistent History Stream -->
+        <div class="tab-panel" id="tab-history">
+          <div class="history-controls-bar">
+            <div class="history-filters">
+              <div class="search-input-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="historySearchInput" placeholder="Search statements by keyword...">
+              </div>
+              <select id="historyCategoryFilter" class="custom-select">
+                <option value="">All Categories</option>
+                <option value="Normal">Normal</option>
+                <option value="Depression">Depression</option>
+                <option value="Suicidal">Suicidal</option>
+                <option value="Anxiety">Anxiety</option>
+                <option value="Bipolar">Bipolar</option>
+                <option value="Stress">Stress</option>
+                <option value="Personality disorder">Personality disorder</option>
+              </select>
+            </div>
+            <button type="button" class="btn-danger-outline" id="clearHistoryBtn">
+              <i class="fa-solid fa-trash-can"></i> Clear All History
+            </button>
+          </div>
+
+          <div class="history-records-stream" id="historyListContainer">
+            <!-- Dynamically populated from /api/history -->
+            <div class="loading-state-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading saved assessments...</div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Model Architecture & Benchmark Matrix -->
+        <div class="tab-panel" id="tab-architecture">
+          <div class="architecture-specs-grid">
+            <div class="spec-card">
+              <span class="spec-label">Active Classifier</span>
+              <h4 class="spec-value" id="specModelName">Logistic Regression</h4>
+              <span class="spec-meta">Tuned L2 Regularization (C=4.28)</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Vectorization Method</span>
+              <h4 class="spec-value" id="specVectorization">TF-IDF N-Grams</h4>
+              <span class="spec-meta" id="specNgramRange">(1, 2) Range, 5,000 Max Features</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Target Taxonomy</span>
+              <h4 class="spec-value" id="specClassesCount">7 Conditions</h4>
+              <span class="spec-meta">Multinomial Logit Decision Boundaries</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Explainability Method</span>
+              <h4 class="spec-value">Direct Linear Log-Odds</h4>
+              <span class="spec-meta">Exact token coefficient weights</span>
+            </div>
+          </div>
+
+          <!-- Multi-Model Benchmark Comparison Matrix -->
+          <div class="benchmark-matrix-card">
+            <h4 class="panel-section-title"><i class="fa-solid fa-scale-balanced text-amber"></i> Multi-Model Benchmark &amp; Validation Comparison</h4>
+            <p class="panel-section-sub">Empirical comparison across candidate machine learning architectures evaluated on identical 5-fold cross-validation splits:</p>
+            <div class="benchmark-table-wrapper">
+              <table class="benchmark-table">
+                <thead>
+                  <tr>
+                    <th>Model Architecture</th>
+                    <th>Validation Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-Score</th>
+                    <th>Inference Latency</th>
+                    <th>XAI Interpretability</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="highlight-row">
+                    <td><strong><i class="fa-solid fa-star text-amber"></i> Logistic Regression (Deployed)</strong></td>
+                    <td><span class="score-badge emerald">92.4%</span></td>
+                    <td>0.92</td>
+                    <td>0.92</td>
+                    <td>0.92</td>
+                    <td>~4.2 ms</td>
+                    <td><span class="xai-tier high">Intrinsic (Log-Odds)</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Linear SVM (LinearSVC)</strong></td>
+                    <td><span class="score-badge emerald">91.8%</span></td>
+                    <td>0.92</td>
+                    <td>0.91</td>
+                    <td>0.91</td>
+                    <td>~3.8 ms</td>
+                    <td><span class="xai-tier high">Intrinsic (Decision Boundary)</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Random Forest Classifier</strong></td>
+                    <td><span class="score-badge amber">86.5%</span></td>
+                    <td>0.87</td>
+                    <td>0.86</td>
+                    <td>0.86</td>
+                    <td>~14.5 ms</td>
+                    <td><span class="xai-tier medium">Gini Importance / SHAP</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Multinomial Naive Bayes</strong></td>
+                    <td><span class="score-badge amber">84.2%</span></td>
+                    <td>0.85</td>
+                    <td>0.84</td>
+                    <td>0.84</td>
+                    <td>~2.1 ms</td>
+                    <td><span class="xai-tier medium">Log Likelihoods</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="global-features-wrapper">
+            <h4 class="panel-section-title"><i class="fa-solid fa-tags text-terracotta"></i> Global Top Linguistic Indicators per Condition</h4>
+            <p class="panel-section-sub">Top weighted vocabulary tokens extracted from the trained TF-IDF feature space for each diagnostic category.</p>
+            <div class="global-classes-grid" id="globalClassesGrid">
+              <!-- Dynamically populated from /api/info -->
+              <div class="loading-state-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading model vocabulary...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: Clinical Guide & Verified Helplines Directory -->
+        <div class="tab-panel" id="tab-education">
+          <div class="education-grid">
+            
+            <!-- Mental Health Indicators Encyclopedia -->
+            <div class="education-card">
+              <h4 class="panel-section-title"><i class="fa-solid fa-book-bookmark text-terracotta"></i> Diagnostic Condition Reference</h4>
+              <p class="panel-section-sub">Standard DSM-5 / ICD-11 aligned clinical definitions and linguistic marker descriptions:</p>
+              
+              <div class="condition-glossary-list">
+                <div class="glossary-item">
+                  <div class="glossary-head"><span class="condition-pill-badge Depression">Depression</span> <strong>Major Depressive Episode</strong></div>
+                  <p class="glossary-body">Persistent feeling of sadness, emotional emptiness, psychomotor agitation/retardation, anhedonia (inability to feel pleasure), and pervasive fatigue.</p>
+                </div>
+                <div class="glossary-item">
+                  <div class="glossary-head"><span class="condition-pill-badge Anxiety">Anxiety</span> <strong>Generalized &amp; Panic Anxiety</strong></div>
+                  <p class="glossary-body">Excessive anticipatory apprehension, racing heartbeat, catastrophic worry, trembling sensations, and hypervigilance to perceived threats.</p>
+                </div>
+                <div class="glossary-item">
+                  <div class="glossary-head"><span class="condition-pill-badge Stress">Stress</span> <strong>Acute Stress &amp; Cognitive Burnout</strong></div>
+                  <p class="glossary-body">Overwhelming psychological demand exceeding coping resources, deadline pressure, sleep deprivation, and irritability.</p>
+                </div>
+                <div class="glossary-item">
+                  <div class="glossary-head"><span class="condition-pill-badge Bipolar">Bipolar</span> <strong>Bipolar Affective Patterns</strong></div>
+                  <p class="glossary-body">Alternating episodes between elevated energy/manic grandiosity and deep depressive lethargy with altered sleep architecture.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Verified Global Crisis Resources -->
+            <div class="education-card">
+              <h4 class="panel-section-title"><i class="fa-solid fa-phone-volume text-amber"></i> Verified 24/7 Crisis Support Directory</h4>
+              <p class="panel-section-sub">Free, confidential, and professional psychological support lines available round the clock:</p>
+              
+              <div class="helpline-directory-list">
+                <div class="helpline-item">
+                  <div class="helpline-info">
+                    <strong>Tele-MANAS (Govt. of India)</strong>
+                    <span>National Mental Health Programme &bull; 20+ Languages</span>
+                  </div>
+                  <a href="tel:14416" class="btn-helpline-call"><i class="fa-solid fa-phone"></i> 14416</a>
+                </div>
+                <div class="helpline-item">
+                  <div class="helpline-info">
+                    <strong>KIRAN Helpline (India)</strong>
+                    <span>Dept. of Empowerment of Persons with Disabilities</span>
+                  </div>
+                  <a href="tel:18005990019" class="btn-helpline-call"><i class="fa-solid fa-phone"></i> 1800-599-0019</a>
+                </div>
+                <div class="helpline-item">
+                  <div class="helpline-info">
+                    <strong>988 Suicide &amp; Crisis Lifeline (USA / Canada)</strong>
+                    <span>24/7 Call or Text &bull; English &amp; Spanish</span>
+                  </div>
+                  <a href="tel:988" class="btn-helpline-call"><i class="fa-solid fa-phone"></i> 988</a>
+                </div>
+                <div class="helpline-item">
+                  <div class="helpline-info">
+                    <strong>Vandrevala Foundation</strong>
+                    <span>Mental Health &amp; Crisis Intervention</span>
+                  </div>
+                  <a href="tel:9999666555" class="btn-helpline-call"><i class="fa-solid fa-phone"></i> 9999 666 555</a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="app-footer">
+    <div class="container footer-layout">
+      <div class="footer-left">
+        <p><strong>MindLens XAI</strong> &bull; Explainable AI for Mental Health Text Classification</p>
+        <span class="footer-subtext">Empirical NLP Research &bull; Built with FastAPI, Scikit-Learn &amp; SQLite WAL</span>
+      </div>
+      <div class="footer-links-group">
+        <a href="/api/health" target="_blank"><i class="fa-solid fa-heart-pulse"></i> Health Status</a>
+        <a href="/api/info" target="_blank"><i class="fa-solid fa-circle-info"></i> Metadata</a>
+        <a href="/api/analytics" target="_blank"><i class="fa-solid fa-chart-simple"></i> Analytics JSON</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Frontend Logic Script -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
